@@ -28,6 +28,7 @@ const attemptRoutes = require('./routes/attemptRoutes');
 const bookmarkRoutes = require('./routes/bookmarkRoutes');
 const userRoutes = require('./routes/userRoutes');
 const userStatsRoutes = require('./routes/userStatsRoutes');
+const faqRoutes = require('./routes/faqRoutes');
 
 // ✅ New Affiliate & Course Routes
 const courseRoutes = require('./routes/courseRoutes');
@@ -52,6 +53,7 @@ app.use('/api/userstats', userStatsRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/affiliate', affiliateRoutes);
 app.use('/api/affiliate-links', affiliateLinkRoutes);
+app.use('/api/faqs', faqRoutes);
 
 // ✅ Optional: fallback for unknown routes
 app.use((req, res) => {
