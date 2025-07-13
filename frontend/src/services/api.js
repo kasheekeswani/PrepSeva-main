@@ -64,7 +64,6 @@ export const updateCourse = (id, formData) => {
 
 /* ----------------------- Affiliate Service Functions ----------------------- */
 
-// ✅ Create Razorpay order with affiliateCode support
 export const createOrder = async (courseId, affiliateCode) => {
   try {
     const response = await API.post('/affiliate/order', { courseId, affiliateCode });
@@ -73,7 +72,7 @@ export const createOrder = async (courseId, affiliateCode) => {
   } catch (error) {
     console.error('❌ Response error:', error.response?.status);
     console.error('❌ Error message:', error.response?.data?.message || error.message);
-    throw error; // let UI handle error display
+    throw error;
   }
 };
 
@@ -118,6 +117,44 @@ export const generateQRCode = (id) =>
 
 export const trackClick = (code) =>
   axios.post(`${API.defaults.baseURL}/affiliate-links/track/${code}`);
+
+/* ----------------------- FAQ Service Functions ----------------------- */
+
+export const getAllFAQs = () => {
+  return API.get('/faq');
+};
+
+export const getActiveFAQs = (params = {}) => {
+  return API.get('/faq/active', { params });
+};
+
+export const searchFAQs = (params) => {
+  return API.get('/faq/search', { params });
+};
+
+export const getFAQById = (id) => {
+  return API.get(`/faq/${id}`);
+};
+
+export const createFAQ = (faqData) => {
+  return API.post('/faq', faqData);
+};
+
+export const updateFAQ = (id, faqData) => {
+  return API.put(`/faq/${id}`, faqData);
+};
+
+export const deleteFAQ = (id) => {
+  return API.delete(`/faq/${id}`);
+};
+
+export const getFAQCategories = () => {
+  return API.get('/faq/categories');
+};
+
+export const getFAQStats = () => {
+  return API.get('/faq/admin/stats');
+};
 
 /* ----------------------- Export Default API ----------------------- */
 export default API;
