@@ -23,6 +23,8 @@ import TestResults from './pages/TestResults';
 import Bookmarks from './pages/Bookmarks';
 import UserNotifications from './pages/UserNotifications';
 import UserProfile from './pages/UserProfile';
+import FAQManager from './pages/FAQManager';
+import FAQFloatingButton from './components/FAQFloatingButton';
 
 // Affiliate
 import CourseMarketplace from './pages/CourseMarketplace';
@@ -90,6 +92,7 @@ function AppRoutes() {
       <Route path="/bookmarks" element={<ProtectedRoute role="user" element={<Bookmarks />} />} />
       <Route path="/notifications" element={<ProtectedRoute role="user" element={<UserNotifications />} />} />
       <Route path="/profile" element={<ProtectedRoute role="user" element={<UserProfile />} />} />
+      <Route path="/faq-manager" element={<FAQManager />} />
     </Routes>
   );
 }
