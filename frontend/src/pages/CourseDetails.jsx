@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getCourseById, createOrder, verifyAndSavePurchase, tokenStorage } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
+
 
 const CourseDetails = () => {
   const { id } = useParams();
