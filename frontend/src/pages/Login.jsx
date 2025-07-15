@@ -1,5 +1,3 @@
-// src/pages/Login.jsx
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import API from '../services/api';
@@ -18,15 +16,18 @@ export default function Login() {
 
     try {
       const res = await API.post('/auth/login', { email, password });
-      const userData = res.data;
+      const { user, token } = res.data;
 
-      if (userData.token) {
-        localStorage.setItem('token', userData.token);
+      console.log("✅ Login response:", { user, token });
+
+      if (!user || !token) {
+        throw new Error('Invalid response from server');
       }
 
-      login(userData);
-      const role = userData?.role;
+      localStorage.setItem('token', token);
+      login(user, token); // updated to pass both user and token
 
+      const role = user.role;
       if (role === 'admin') {
         navigate('/dashboard');
       } else if (role === 'user') {
@@ -35,7 +36,7 @@ export default function Login() {
         alert('Invalid user role.');
       }
     } catch (err) {
-      console.error(err);
+      console.error('❌ Login error:', err);
       alert(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
@@ -85,22 +86,7 @@ export default function Login() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{
-            padding: '0.75rem',
-            borderRadius: '6px',
-            border: '1px solid #ccc',
-            fontSize: '1rem',
-            outline: 'none',
-            transition: 'border 0.2s, box-shadow 0.2s',
-          }}
-          onFocus={(e) => {
-            e.target.style.border = '1px solid #007bff';
-            e.target.style.boxShadow = '0 0 0 3px rgba(0,123,255,0.1)';
-          }}
-          onBlur={(e) => {
-            e.target.style.border = '1px solid #ccc';
-            e.target.style.boxShadow = 'none';
-          }}
+          style={inputStyle}
         />
 
         <input
@@ -109,22 +95,7 @@ export default function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{
-            padding: '0.75rem',
-            borderRadius: '6px',
-            border: '1px solid #ccc',
-            fontSize: '1rem',
-            outline: 'none',
-            transition: 'border 0.2s, box-shadow 0.2s',
-          }}
-          onFocus={(e) => {
-            e.target.style.border = '1px solid #007bff';
-            e.target.style.boxShadow = '0 0 0 3px rgba(0,123,255,0.1)';
-          }}
-          onBlur={(e) => {
-            e.target.style.border = '1px solid #ccc';
-            e.target.style.boxShadow = 'none';
-          }}
+          style={inputStyle}
         />
 
         <button
@@ -182,3 +153,20 @@ export default function Login() {
     </div>
   );
 }
+
+const inputStyle = {
+  padding: '0.75rem',
+  borderRadius: '6px',
+  border: '1px solid #ccc',
+  fontSize: '1rem',
+  outline: 'none',
+  transition: 'border 0.2s, box-shadow 0.2s',
+  onFocus: (e) => {
+    e.target.style.border = '1px solid #007bff';
+    e.target.style.boxShadow = '0 0 0 3px rgba(0,123,255,0.1)';
+  },
+  onBlur: (e) => {
+    e.target.style.border = '1px solid #ccc';
+    e.target.style.boxShadow = 'none';
+  },
+};
