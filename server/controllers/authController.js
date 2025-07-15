@@ -1,4 +1,3 @@
-// server/controllers/authController.js
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
@@ -17,12 +16,14 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    const user = await User.create({ name, email, password }); // default: role = 'user'
+    const user = await User.create({ name, email, password }); // role defaults to 'user'
 
     res.status(201).json({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+      },
       token: generateToken(user._id),
     });
   } catch (err) {
@@ -47,9 +48,11 @@ const login = async (req, res) => {
     }
 
     res.json({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+      },
       token: generateToken(user._id),
     });
   } catch (err) {
@@ -76,9 +79,11 @@ const adminRegister = async (req, res) => {
     });
 
     res.status(201).json({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+      },
       token: generateToken(user._id),
     });
   } catch (err) {
@@ -103,9 +108,11 @@ const adminLogin = async (req, res) => {
     }
 
     res.json({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+      },
       token: generateToken(user._id),
     });
   } catch (err) {
