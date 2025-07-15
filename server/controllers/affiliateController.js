@@ -1,5 +1,3 @@
-// server/controllers/affiliateController.js
-
 const razorpay = require('../config/razorpay');
 const Course = require('../models/Course');
 const AffiliatePurchase = require('../models/AffiliatePurchase');
@@ -7,7 +5,13 @@ const AffiliateLink = require('../models/AffiliateLink');
 const User = require('../models/User');
 const crypto = require('crypto');
 
-// ✅ Create Order with Razorpay
+const generateShortReceipt = (courseId) => {
+  const timestamp = Date.now().toString().slice(-8);
+  const courseIdShort = courseId.toString().slice(-6);
+  const random = Math.random().toString(36).substring(2, 4).toUpperCase();
+  return `rcpt_${courseIdShort}_${timestamp}_${random}`.substring(0, 40);
+};
+
 exports.createOrder = async (req, res) => {
   try {
     const { courseId, affiliateCode } = req.body;
@@ -21,19 +25,23 @@ exports.createOrder = async (req, res) => {
     });
 
     if (!courseId) {
+      console.error('❌ Course ID missing');
       return res.status(400).json({ status: 400, message: "Course ID is required" });
     }
 
     if (!userId) {
+      console.error('❌ User ID missing from token');
       return res.status(401).json({ status: 401, message: "User not authenticated" });
     }
 
     if (!razorpay) {
+      console.error('❌ Razorpay instance not initialized');
       return res.status(500).json({ status: 500, message: "Payment gateway not initialized. Contact support." });
     }
 
     const course = await Course.findById(courseId);
     if (!course) {
+      console.error('❌ Course not found:', courseId);
       return res.status(404).json({ status: 404, message: "Course not found" });
     }
 
@@ -41,16 +49,21 @@ exports.createOrder = async (req, res) => {
     let affiliateId = null;
 
     if (affiliateCode) {
-      const affiliateLink = await AffiliateLink.findOne({ code: affiliateCode });
+      const affiliateLink = await AffiliateLink.findOne({ affiliateCode });
       if (affiliateLink) {
-        affiliateId = affiliateLink.affiliateId;
+        affiliateId = affiliateLink.affiliate;
+        console.log('✅ Found affiliate:', affiliateId);
+      } else {
+        console.warn('⚠️ Invalid affiliate code:', affiliateCode);
       }
     }
+
+    const shortReceipt = generateShortReceipt(courseId);
 
     const orderData = {
       amount: amountInPaise,
       currency: "INR",
-      receipt: `receipt_${courseId}_${Date.now()}`,
+      receipt: shortReceipt,
       notes: {
         courseId: courseId.toString(),
         affiliateId: affiliateId ? affiliateId.toString() : '',
@@ -59,12 +72,13 @@ exports.createOrder = async (req, res) => {
       }
     };
 
+    console.log('✅ Creating order with receipt:', shortReceipt, 'Length:', shortReceipt.length);
+
     const order = await razorpay.orders.create(orderData);
 
     res.status(200).json({ status: 200, order });
   } catch (error) {
-    console.error('❌ Error in createOrder:', error);
-
+    console.error('❌ Error in createOrder:', error.message);
     if (error.statusCode) {
       return res.status(error.statusCode).json({
         status: error.statusCode,
@@ -80,7 +94,6 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// ✅ Verify Razorpay Payment and Save Purchase with Better Error Handling
 exports.verifyAndSavePurchase = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId, affiliateCode } = req.body;
@@ -114,7 +127,7 @@ exports.verifyAndSavePurchase = async (req, res) => {
       .digest('hex');
 
     if (expectedSignature !== razorpay_signature) {
-      console.error('❌ Invalid Razorpay signature verification failed');
+      console.error('❌ Invalid Razorpay signature');
       return res.status(400).json({ message: "Invalid payment signature. Verification failed." });
     }
 
@@ -129,13 +142,13 @@ exports.verifyAndSavePurchase = async (req, res) => {
     let commission = 0;
 
     if (affiliateCode) {
-      affiliateLink = await AffiliateLink.findOne({ code: affiliateCode });
+      affiliateLink = await AffiliateLink.findOne({ affiliateCode });
       if (affiliateLink) {
-        affiliateId = affiliateLink.affiliateId;
+        affiliateId = affiliateLink.affiliate;
         await AffiliateLink.findByIdAndUpdate(affiliateLink._id, { $inc: { conversions: 1 } });
         commission = (course.affiliateCommission / 100) * course.price;
       } else {
-        console.warn('⚠️ Invalid affiliate code provided:', affiliateCode);
+        console.warn('⚠️ Invalid affiliate code:', affiliateCode);
       }
     }
 
@@ -156,15 +169,11 @@ exports.verifyAndSavePurchase = async (req, res) => {
       await AffiliateLink.findByIdAndUpdate(affiliateLink._id, { $inc: { earnings: commission } });
     }
 
-    console.log('✅ Purchase verified and saved successfully:', {
-      purchaseId: purchase._id,
-      commission,
-      affiliateId
-    });
+    console.log('✅ Purchase verified and saved:', { purchaseId: purchase._id, commission, affiliateId });
 
     res.status(200).json({ success: true, purchase });
   } catch (error) {
-    console.error('❌ Error in verifyAndSavePurchase:', error);
+    console.error('❌ Error in verifyAndSavePurchase:', error.message);
     res.status(500).json({
       message: error.message || "Error verifying and saving purchase",
       error: process.env.NODE_ENV === 'development' ? error.stack : undefined
@@ -172,7 +181,6 @@ exports.verifyAndSavePurchase = async (req, res) => {
   }
 };
 
-// ✅ Get Affiliate Earnings
 exports.getEarnings = async (req, res) => {
   try {
     const earnings = await AffiliatePurchase.aggregate([
@@ -185,7 +193,7 @@ exports.getEarnings = async (req, res) => {
       totalEarned: earnings[0]?.total || 0
     });
   } catch (error) {
-    console.error('❌ Error in getEarnings:', error);
+    console.error('❌ Error in getEarnings:', error.message);
     res.status(500).json({
       status: 500,
       message: "Error fetching earnings",
@@ -194,7 +202,6 @@ exports.getEarnings = async (req, res) => {
   }
 };
 
-// ✅ Get Leaderboard
 exports.getLeaderboard = async (req, res) => {
   try {
     const leaderboard = await AffiliatePurchase.aggregate([
@@ -226,7 +233,7 @@ exports.getLeaderboard = async (req, res) => {
       leaderboard
     });
   } catch (error) {
-    console.error('❌ Error in getLeaderboard:', error);
+    console.error('❌ Error in getLeaderboard:', error.message);
     res.status(500).json({
       status: 500,
       message: "Error fetching leaderboard",

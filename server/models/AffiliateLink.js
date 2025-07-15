@@ -11,7 +11,7 @@ const affiliateLinkSchema = new mongoose.Schema({
     ref: 'Course',
     required: true
   },
-  affiliateCode: {
+  code: {
     type: String,
     required: true,
     unique: true
