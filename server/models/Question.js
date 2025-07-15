@@ -10,7 +10,7 @@ const questionSchema = new mongoose.Schema({
   testId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Test',
-    required: true, // Required for test-taking
+    required: false, // Required for test-taking
   },
   questionText: {
     type: String,

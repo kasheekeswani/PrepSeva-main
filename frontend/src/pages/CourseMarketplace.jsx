@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { fetchCourses, createOrder, verifyPurchase } from '../services/api';
+import { fetchCourses, createOrder, verifyAndSavePurchase } from '../services/api';
 import CourseCard from '../components/CourseCard';
 import { useAuth } from '../context/AuthContext';
 
@@ -56,7 +56,7 @@ const CourseMarketplace = () => {
         handler: async (response) => {
           try {
             // Verify payment with affiliate code
-            await verifyPurchase({
+            await verifyAndSavePurchase({
               courseId: course._id,
               affiliateCode: affiliateCode || null,
               paymentId: response.razorpay_payment_id,

@@ -83,12 +83,16 @@ const QuestionManager = () => {
     setLoading(true);
     const payload = {
       pdfId: selectedPdfId,
-      testId: selectedTestId,
       questionText,
       options,
       correctAnswer,
       explanation,
     };
+
+    if (selectedTestId) {
+      payload.testId = selectedTestId;
+    }
+
 
     try {
       if (editingQuestionId) {

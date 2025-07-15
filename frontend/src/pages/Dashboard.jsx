@@ -12,6 +12,7 @@ import NotificationManager from './NotificationManager';
 import AddCourse from './AddCourse';
 import CourseMarketplace from './CourseMarketplace';
 import AffiliateLeaderboard from './AffiliateLeaderboard';
+import AdminTestAttempts from './AdminTestAttempts'; // ✅ Import the new tab component
 
 export default function Dashboard() {
   const { user, isAdmin, logout } = useAuth();
@@ -47,6 +48,8 @@ export default function Dashboard() {
         return <CourseMarketplace />;
       case 'leaderboard':
         return <AffiliateLeaderboard />;
+      case 'attempts': // ✅ Render the new component
+        return <AdminTestAttempts />;
       default:
         return <PdfManager />;
     }
@@ -61,6 +64,7 @@ export default function Dashboard() {
     { key: 'addCourse', label: '➕ Add Course' },
     { key: 'courses', label: '📦 Courses' },
     { key: 'leaderboard', label: '🏆 Leaderboard' },
+    { key: 'attempts', label: '📋 Attempts' }, // ✅ New Tab
   ];
 
   if (!user || !isAdmin) return null;

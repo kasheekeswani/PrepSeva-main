@@ -2,6 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const testController = require('../controllers/testController');
+const { getTestsByPdf } = require('../controllers/testController');
+
+router.get('/pdf/:pdfId', getTestsByPdf);
 
 // GET all tests
 router.get('/', testController.getAllTests);

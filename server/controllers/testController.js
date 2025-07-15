@@ -76,11 +76,25 @@ const deleteTest = async (req, res) => {
   res.json({ message: 'Test deleted' });
 };
 
+
+
+const getTestsByPdf = async (req, res) => {
+  try {
+    const tests = await Test.find({ pdfId: req.params.pdfId }).populate('pdfId questionIds');
+    res.json(tests);
+  } catch (err) {
+    console.error('❌ Failed to get tests by PDF:', err);
+    res.status(500).json({ error: 'Failed to fetch tests for this PDF' });
+  }
+};
+
+
 // ✅ Proper export
 module.exports = {
   submitTest,
   getAllTests,
   getTestById,
+  getTestsByPdf,
   createTest,
   updateTest,
   deleteTest,

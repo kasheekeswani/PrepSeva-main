@@ -14,7 +14,7 @@ exports.submitAttempt = async (req, res) => {
       answers.map(async (answer) => {
         const question = await Question.findById(answer.questionId);
 
-        const isCorrect = question && question.correctOption === answer.selectedOption;
+        const isCorrect = question && question.correctAnswer === answer.selectedOption;
         if (isCorrect) correctCount++;
 
         return {
@@ -50,5 +50,17 @@ exports.getUserAttempts = async (req, res) => {
     res.json(attempts);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch attempts' });
+  }
+};
+
+// Get all attempts (for admin)
+exports.getAllAttempts = async (req, res) => {
+  try {
+    const attempts = await TestAttempt.find()
+      .populate('userId', 'name email') // populate user info
+      .populate('testId', 'title');     // populate test info
+    res.json(attempts);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch all attempts' });
   }
 };

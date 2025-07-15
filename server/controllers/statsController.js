@@ -1,7 +1,6 @@
 // server/controllers/statsController.js
 const User = require('../models/User');
 const Test = require('../models/Test');
-const mongoose = require('mongoose');
 
 exports.getUserStats = async (req, res) => {
   try {
@@ -32,6 +31,7 @@ exports.getUserStats = async (req, res) => {
         $project: {
           name: 1,
           email: 1,
+          createdAt: 1, // ✅ Include createdAt
           testCount: { $size: '$tests' }
         }
       }
@@ -44,8 +44,7 @@ exports.getUserStats = async (req, res) => {
       userTestData
     });
   } catch (err) {
+    console.error('❌ Error in getUserStats:', err);
     res.status(500).json({ message: 'Server Error', error: err.message });
   }
 };
-
-

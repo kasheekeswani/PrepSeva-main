@@ -29,9 +29,8 @@ const QRCodeGenerator = ({ link, onClose }) => {
         throw new Error('Failed to generate QR code');
       }
 
-      const blob = await response.blob();
-      const qrCodeUrl = URL.createObjectURL(blob);
-      setQrCode(qrCodeUrl);
+      const data = await response.json();
+      setQrCode(data.q); // ✅ FIXED: use `q` instead of `qrCode`
     } catch (err) {
       setError(err.message);
     } finally {

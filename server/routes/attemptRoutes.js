@@ -4,9 +4,11 @@ const router = express.Router();
 const {
   submitAttempt,
   getUserAttempts,
+  getAllAttempts,
 } = require('../controllers/attemptController');
 
-router.post('/', submitAttempt);           // Submit test attempt
-router.get('/:userId', getUserAttempts);   // Get all attempts by user
-
+router.post('/', submitAttempt);
+router.get('/', getAllAttempts);          
+router.get('/:userId', getUserAttempts);  
+ 
 module.exports = router;

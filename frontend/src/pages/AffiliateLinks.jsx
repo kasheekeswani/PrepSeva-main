@@ -93,7 +93,7 @@ const AffiliateLinks = () => {
   const generateQRCode = async (linkId) => {
     try {
       const response = await api.get(`/affiliate-links/${linkId}/qr`);
-      setQrCode(response.data.qrCode);
+      setQrCode(response.data.qr); // Fixed: changed from qrCode to qr
       setShowQRModal(true);
     } catch (error) {
       console.error('Error generating QR code:', error);

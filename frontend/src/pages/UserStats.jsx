@@ -1,4 +1,4 @@
-// src/pages/UserStats.jsx
+// frontend/src/pages/UserStats.jsx
 import { useEffect, useState } from 'react';
 import API from '../services/api';
 
@@ -67,12 +67,17 @@ export default function UserStats() {
           </div>
         </div>
 
-        {/* User Test Table */}
+        {/* User List Table */}
         <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#111827', marginBottom: '0.75rem' }}>
-          🧑‍💻 User Test Data
+          🧑‍💻 Registered Users
         </h3>
 
-        <div style={{ overflowX: 'auto', backgroundColor: '#ffffff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+        <div style={{
+          overflowX: 'auto',
+          backgroundColor: '#ffffff',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        }}>
           <table style={{
             width: '100%',
             borderCollapse: 'collapse',
@@ -82,21 +87,25 @@ export default function UserStats() {
               <tr>
                 <th style={tableHeaderCell}>Name</th>
                 <th style={tableHeaderCell}>Email</th>
-                <th style={tableHeaderCell}>Tests Completed</th>
+                <th style={tableHeaderCell}>Date Joined</th>
               </tr>
             </thead>
             <tbody>
               {(stats?.userTestData ?? []).map((user, idx) => (
-                <tr key={user._id} style={{
-                  backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9fafb',
-                  transition: 'background 0.2s',
-                }}
+                <tr
+                  key={user._id}
+                  style={{
+                    backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9fafb',
+                    transition: 'background 0.2s',
+                  }}
                   onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e0f2fe'}
                   onMouseLeave={e => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#ffffff' : '#f9fafb'}
                 >
                   <td style={tableCell}>{user.name}</td>
                   <td style={tableCell}>{user.email}</td>
-                  <td style={tableCell}>{user.testCount}</td>
+                  <td style={tableCell}>
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                  </td>
                 </tr>
               ))}
             </tbody>

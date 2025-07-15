@@ -1,68 +1,104 @@
 // src/pages/CourseDetails.jsx
 
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getCourseById, createOrder, verifyPurchase } from '../services/api';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { getCourseById, createOrder, verifyAndSavePurchase } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const CourseDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
 
+  // ✅ Capture ?ref=CODE for affiliate tracking
   useEffect(() => {
-    getCourseById(id)
-      .then((res) => {
+    const params = new URLSearchParams(location.search);
+    const affiliateCode = params.get('ref');
+    if (affiliateCode) {
+      localStorage.setItem('affiliateCode', affiliateCode);
+    }
+  }, [location.search]);
+
+  // ✅ Fetch course
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        const res = await getCourseById(id);
         setCourse(res.data);
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => setLoading(false));
+      } catch (error) {
+        console.error('❌ Error fetching course:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourse();
   }, [id]);
 
   const loadRazorpay = async () => {
     if (!window.Razorpay) {
-      alert('Razorpay SDK not loaded.');
+      alert('❌ Razorpay SDK not loaded.');
       return;
     }
+
     setPurchasing(true);
     try {
-      const { data } = await createOrder(course._id, user._id);
+      const savedAffiliateCode = localStorage.getItem('affiliateCode');
+
+      // ✅ Create order with affiliate tracking
+      const { order } = await createOrder(course._id, savedAffiliateCode);
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: data.order.amount,
+        amount: order.amount,
         currency: 'INR',
-        name: 'Affiliate Course Purchase',
+        name: 'Course Purchase',
         description: course.title,
-        order_id: data.order.id,
+        order_id: order.id,
         handler: async (response) => {
           try {
-            await verifyPurchase({
+            console.log('✅ Razorpay response:', response);
+
+            // ✅ Verify purchase with all required data
+            await verifyAndSavePurchase({
+              razorpay_order_id: order.id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
               courseId: course._id,
-              affiliateId: user._id,
-              paymentId: response.razorpay_payment_id,
+              affiliateCode: savedAffiliateCode,
             });
-            alert('✅ Purchase Successful!');
-          } catch {
-            alert('❌ Payment verification failed.');
+
+            // ✅ Remove affiliate code from localStorage
+            localStorage.removeItem('affiliateCode');
+
+            // ✅ Show toast and redirect
+            toast.success('✅ Purchase successful!');
+            navigate('/my-courses');
+          } catch (err) {
+            console.error('❌ Payment verification failed:', err);
+            console.error('❌ Error details:', err.response?.data);
+            toast.error('❌ Payment verification failed. Please contact support.');
           }
         },
         prefill: {
-          name: user.name,
-          email: user.email,
+          name: user?.name || '',
+          email: user?.email || '',
         },
-        theme: { color: '#3B82F6' },
+        theme: {
+          color: '#3B82F6',
+        },
       };
+
       const paymentObject = new window.Razorpay(options);
       paymentObject.open();
-    } catch (error) {
-      console.error(error);
-      alert('❌ Failed to initiate payment.');
+    } catch (err) {
+      console.error('❌ Payment initiation failed:', err);
+      toast.error('❌ Failed to initiate payment.');
     } finally {
       setPurchasing(false);
     }
@@ -70,40 +106,20 @@ const CourseDetails = () => {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        background: 'linear-gradient(to bottom right, #eef2ff, #e0e7ff)'
-      }}>
-        <div style={{
-          border: '4px solid #3B82F6',
-          borderTop: '4px solid transparent',
-          borderRadius: '50%',
-          width: '48px',
-          height: '48px',
-          animation: 'spin 1s linear infinite'
-        }} />
+      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100">
+        <div className="animate-spin border-4 border-blue-500 border-t-transparent rounded-full w-12 h-12" />
       </div>
     );
   }
 
   if (!course) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>Course Not Found</h2>
-        <p style={{ marginBottom: '1rem', color: '#555' }}>This course does not exist or was removed.</p>
+      <div className="text-center p-8">
+        <h2 className="text-2xl font-bold mb-2">Course Not Found</h2>
+        <p className="mb-4 text-gray-600">This course does not exist or was removed.</p>
         <button
           onClick={() => navigate(-1)}
-          style={{
-            backgroundColor: '#3B82F6',
-            color: '#fff',
-            padding: '0.5rem 1rem',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer'
-          }}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
         >
           Go Back
         </button>
@@ -112,65 +128,38 @@ const CourseDetails = () => {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(to bottom right, #eef2ff, #e0e7ff)',
-      display: 'flex',
-      justifyContent: 'center',
-      padding: '2rem'
-    }}>
-      <div style={{
-        maxWidth: '600px',
-        backgroundColor: '#fff',
-        borderRadius: '16px',
-        padding: '1.5rem',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-      }}>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 flex justify-center p-4">
+      <div className="max-w-lg bg-white rounded-2xl shadow-md p-6">
         <img
           src={course.thumbnail}
           alt={course.title}
-          style={{
-            width: '100%',
-            height: '300px',
-            objectFit: 'cover',
-            borderRadius: '12px',
-            marginBottom: '1rem'
-          }}
+          className="w-full h-64 object-cover rounded-xl mb-4"
         />
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{course.title}</h1>
-        <p style={{ marginBottom: '1rem', color: '#444' }}>{course.description}</p>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          backgroundColor: '#f3f4f6',
-          padding: '0.75rem',
-          borderRadius: '8px',
-          marginBottom: '1rem',
-          fontWeight: '500'
-        }}>
-          <div>Price: ₹{course.price}</div>
-          <div style={{ color: 'green' }}>Commission: {course.affiliateCommission}%</div>
+        <h1 className="text-2xl font-bold mb-2">{course.title}</h1>
+        <p className="text-gray-700 mb-4">{course.description}</p>
+
+        <div className="flex justify-between items-center bg-gray-100 p-3 rounded-lg mb-4 font-medium">
+          <span>Price: ₹{course.price}</span>
+          <span className="text-green-600">
+            Commission: {course.affiliateCommission}%
+          </span>
         </div>
+
         {user?.role === 'user' && (
           <button
             onClick={loadRazorpay}
             disabled={purchasing}
-            style={{
-              width: '100%',
-              backgroundColor: purchasing ? '#93c5fd' : '#3B82F6',
-              color: '#fff',
-              padding: '0.75rem',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: '600',
-              cursor: purchasing ? 'not-allowed' : 'pointer'
-            }}
+            className={`w-full py-3 rounded-lg font-semibold transition ${purchasing
+                ? 'bg-blue-300 cursor-not-allowed'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
           >
             {purchasing ? 'Processing...' : 'Buy Now'}
           </button>
         )}
+
         {user?.role === 'admin' && (
-          <div style={{ textAlign: 'center', marginTop: '1rem', color: '#7c3aed', fontWeight: '600' }}>
+          <div className="text-center mt-4 text-purple-600 font-semibold">
             Admin Preview Mode
           </div>
         )}
