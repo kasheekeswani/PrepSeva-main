@@ -43,7 +43,7 @@ const ProtectedRoute = ({ element, role }) => {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  if (!user) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/login" replace />;
   if (role && user.role !== role) return <Navigate to="/" replace />;
 
   return element;
@@ -59,22 +59,23 @@ function AppRoutes() {
   return (
     <>
       <Routes>
-        {/* Public */}
+        {/* Public Routes */}
         <Route
           path="/"
           element={
             user ? (
-              <Navigate to={user.role === 'admin' ? '/dashboard' : '/user/dashboard'} replace />
+              <Navigate to={user.role === "admin" ? "/dashboard" : "/user/dashboard"} replace />
             ) : (
-              <Login />
+              <Navigate to="/login" replace />
             )
           }
         />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/courses" element={<CourseMarketplace />} />
         <Route path="/courses/:id" element={<CourseDetails />} />
 
-        {/* Admin */}
+        {/* Admin Routes */}
         <Route path="/dashboard" element={<ProtectedRoute role="admin" element={<Dashboard />} />} />
         <Route path="/pdfs" element={<ProtectedRoute role="admin" element={<PdfManager />} />} />
         <Route path="/questions" element={<ProtectedRoute role="admin" element={<QuestionManager />} />} />
@@ -87,7 +88,7 @@ function AppRoutes() {
         <Route path="/affiliate-stats" element={<ProtectedRoute role="admin" element={<AffiliateStats />} />} />
         <Route path="/admin/attempts" element={<ProtectedRoute role="admin" element={<AdminTestAttempts />} />} />
 
-        {/* User */}
+        {/* User Routes */}
         <Route path="/user/dashboard" element={<ProtectedRoute role="user" element={<UserDashboard />} />} />
         <Route path="/pdf-library" element={<ProtectedRoute role="user" element={<PDFLibrary />} />} />
         <Route path="/tests/list" element={<ProtectedRoute role="user" element={<TestList />} />} />
@@ -99,9 +100,8 @@ function AppRoutes() {
         <Route path="/faq-manager" element={<ProtectedRoute role="user" element={<FAQManager />} />} />
       </Routes>
 
-      {/* Floating FAQ Button (Visible on all pages) */}
+      {/* Global Components */}
       <FAQFloatingButton />
-
       <ToastContainer position="top-right" autoClose={3000} />
     </>
   );
