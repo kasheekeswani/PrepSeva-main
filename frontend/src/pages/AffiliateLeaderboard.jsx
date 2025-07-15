@@ -5,7 +5,10 @@ const AffiliateLeaderboard = () => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    getLeaderboard().then((res) => setData(res.data));
+    getLeaderboard().then((res) => {
+      console.log('📊 Leaderboard API response:', res.data);
+      setData(res.data.leaderboard || []);
+    });
   }, []);
 
   return (
@@ -22,23 +25,29 @@ const AffiliateLeaderboard = () => {
             </tr>
           </thead>
           <tbody>
-            {data.map((u, i) => (
-              <tr
-                key={u.email}
-                style={{
-                  ...styles.bodyRow,
-                  backgroundColor: i % 2 === 0 ? '#f9f9f9' : '#ffffff',
-                  cursor: 'default',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e6f0fa')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? '#f9f9f9' : '#ffffff')}
-              >
-                <td style={styles.cell}>{i + 1}</td>
-                <td style={styles.cell}>{u.name}</td>
-                <td style={styles.cell}>{u.email}</td>
-                <td style={styles.cell}>{u.totalCommission.toFixed(2)}</td>
+            {Array.isArray(data) && data.length > 0 ? (
+              data.map((u, i) => (
+                <tr
+                  key={u.email}
+                  style={{
+                    ...styles.bodyRow,
+                    backgroundColor: i % 2 === 0 ? '#f9f9f9' : '#ffffff',
+                    cursor: 'default',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e6f0fa')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? '#f9f9f9' : '#ffffff')}
+                >
+                  <td style={styles.cell}>{i + 1}</td>
+                  <td style={styles.cell}>{u.name}</td>
+                  <td style={styles.cell}>{u.email}</td>
+                  <td style={styles.cell}>{u.totalCommission.toFixed(2)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" style={styles.cell}>No data available</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
