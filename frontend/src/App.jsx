@@ -96,7 +96,7 @@ function AppRoutes() {
         <Route path="/bookmarks" element={<ProtectedRoute role="user" element={<Bookmarks />} />} />
         <Route path="/notifications" element={<ProtectedRoute role="user" element={<UserNotifications />} />} />
         <Route path="/profile" element={<ProtectedRoute role="user" element={<UserProfile />} />} />
-        <Route path="/faq-manager" element={<ProtectedRoute role="admin" element={<FAQManager />} />} />
+        <Route path="/faq-manager" element={<ProtectedRoute role="user" element={<FAQManager />} />} />
       </Routes>
 
       {/* Floating FAQ Button (Visible on all pages) */}
