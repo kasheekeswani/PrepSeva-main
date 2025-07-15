@@ -21,37 +21,111 @@ export default function Register() {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow-md w-96 space-y-4"
-      >
-        <h2 className="text-xl font-bold">User Register</h2>
-        <input
-          className="w-full p-2 border rounded"
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className="w-full p-2 border rounded"
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          className="w-full p-2 border rounded"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button className="bg-green-500 text-white px-4 py-2 rounded w-full">
-          Register
-        </button>
-      </form>
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h2 style={styles.title}>🚀 Register</h2>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Full Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={styles.input}
+            />
+          </div>
+
+          <button type="submit" style={styles.button}>
+            Create Account
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    height: '100vh',
+    margin: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(to top right, #f1f9ff, #d2f2e9)',
+    fontFamily: '"Inter", sans-serif',
+  },
+  card: {
+    background: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: '16px',
+    padding: '40px 32px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+    maxWidth: '420px',
+    width: '100%',
+    backdropFilter: 'blur(10px)',
+  },
+  title: {
+    fontSize: '26px',
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: '24px',
+    color: '#2a2a2a',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '18px',
+  },
+  inputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  label: {
+    marginBottom: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#444',
+  },
+  input: {
+    padding: '12px 14px',
+    fontSize: '15px',
+    borderRadius: '8px',
+    border: '1px solid #ccc',
+    outline: 'none',
+    transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+  },
+  button: {
+    marginTop: '10px',
+    padding: '14px',
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#fff',
+    background: '#1a73e8',
+    border: 'none',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'background 0.3s ease, transform 0.1s ease',
+  },
+};
