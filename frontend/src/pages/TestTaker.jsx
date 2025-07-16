@@ -1,47 +1,83 @@
 // frontend/src/pages/tests/TestTaker.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import dayjs from 'dayjs';
 
 export default function TestTaker() {
   const { testId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [test, setTest] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [status, setStatus] = useState('loading');
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  const timerRef = useRef(null);
 
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchTestAndQuestions = async () => {
       try {
-        setLoading(true);
         setError(null);
+        const testRes = await API.get(`/tests/${testId}`);
+        const qRes = await API.get(`/questions/test/${testId}`);
 
-        const res = await API.get(`/questions/test/${testId}`);
-        setQuestions(res.data);
+        setTest(testRes.data);
+        setQuestions(qRes.data);
 
-        if (res.data.length === 0) {
-          setError('No questions found for this test. Please contact admin.');
+        const now = dayjs();
+        const start = dayjs(testRes.data.startTime);
+        const durationMs = testRes.data.duration * 60 * 1000;
+        const end = start.add(durationMs, 'millisecond');
+
+        if (now.isBefore(start)) {
+          setStatus('not-started');
+          setTimeLeft(start.diff(now, 'second'));
+        } else if (now.isAfter(end)) {
+          setStatus('ended');
+        } else {
+          setStatus('in-progress');
+          setTimeLeft(end.diff(now, 'second'));
         }
       } catch (err) {
-        console.error('Error loading questions:', err);
-        setError(`Failed to load questions: ${err.response?.data?.message || err.message}`);
+        console.error('Error loading test/questions:', err);
+        setError(`Failed to load test: ${err.response?.data?.message || err.message}`);
       } finally {
         setLoading(false);
       }
     };
 
-    if (testId) {
-      fetchQuestions();
-    } else {
-      setError('No test ID provided');
-      setLoading(false);
-    }
+    fetchTestAndQuestions();
   }, [testId]);
+
+  useEffect(() => {
+    if (status !== 'in-progress') return;
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          handleSubmit();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+  }, [status]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleSelect = (qId, optionIdx) => {
     setAnswers((prev) => ({ ...prev, [qId]: optionIdx }));
@@ -49,7 +85,7 @@ export default function TestTaker() {
 
   const handleSubmit = async () => {
     const unanswered = questions.filter((q) => answers[q._id] === undefined);
-    if (unanswered.length > 0) {
+    if (unanswered.length > 0 && status !== 'auto-submit') {
       return alert(`You missed ${unanswered.length} question(s). Please answer all.`);
     }
 
@@ -63,7 +99,6 @@ export default function TestTaker() {
           selectedOption: answers[q._id],
         })),
       };
-
       await API.post('/attempts', payload);
       alert('✅ Test submitted successfully!');
       navigate('/user/dashboard');
@@ -148,8 +183,7 @@ export default function TestTaker() {
       <div style={styles.container}>
         <h2 style={styles.heading}>📝 Take Test</h2>
         <div style={styles.alert}>
-          <p>Loading questions for test ID: <code>{testId}</code></p>
-          <p style={{ fontSize: '0.9rem', color: '#4b5563' }}>Please wait...</p>
+          <p>Loading test and questions...</p>
         </div>
       </div>
     );
@@ -160,9 +194,8 @@ export default function TestTaker() {
       <div style={styles.container}>
         <h2 style={styles.heading}>📝 Take Test</h2>
         <div style={styles.errorBox}>
-          <h3 style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#b91c1c' }}>Error Loading Questions</h3>
+          <h3 style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#b91c1c' }}>Error Loading</h3>
           <p style={{ color: '#b91c1c' }}>{error}</p>
-          <p style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: '0.5rem' }}>Test ID: {testId}</p>
           <button
             onClick={() => window.location.reload()}
             style={{ ...styles.submitButton, backgroundColor: '#ef4444', marginTop: '1rem' }}
@@ -174,12 +207,30 @@ export default function TestTaker() {
     );
   }
 
+  if (status === 'not-started') {
+    return (
+      <div style={styles.container}>
+        <h2 style={styles.heading}>📝 Take Test</h2>
+        <div style={styles.alert}>Test will start at: {dayjs(test?.startTime).format('YYYY-MM-DD HH:mm:ss')}</div>
+      </div>
+    );
+  }
+
+  if (status === 'ended') {
+    return (
+      <div style={styles.container}>
+        <h2 style={styles.heading}>📝 Take Test</h2>
+        <div style={styles.alert}>Test has ended.</div>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       <h2 style={styles.heading}>📝 Take Test</h2>
 
       <div style={styles.alert}>
-        ✅ Loaded {questions.length} question(s) for test ID: <code>{testId}</code>
+        ⏳ Time Left: {formatTime(timeLeft)} — {questions.length} questions loaded
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
