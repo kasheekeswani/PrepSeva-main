@@ -12,6 +12,9 @@ router.get('/', testController.getAllTests);
 // GET a single test by ID
 router.get('/:id', testController.getTestById);
 
+// ✅ CREATE a new test (supports scheduling)
+router.post('/create', testController.createTest);
+
 // CREATE a new test
 router.post('/', testController.createTest);
 
