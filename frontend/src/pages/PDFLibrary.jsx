@@ -36,9 +36,23 @@ export default function PDFLibrary() {
     setDownloadingId(pdf._id);
     try {
       await API.post('/pdfs/track-download', { pdfId: pdf._id });
-      window.open(pdf.pdfUrl, '_blank');
+
+      const response = await fetch(pdf.pdfUrl);
+      if (!response.ok) throw new Error('Network response was not ok');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${pdf.title}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Failed to track/download PDF:', err);
+      console.error('Failed to download PDF:', err);
       alert('Something went wrong while downloading.');
     } finally {
       setDownloadingId(null);
