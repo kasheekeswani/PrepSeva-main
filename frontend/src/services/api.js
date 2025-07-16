@@ -9,7 +9,7 @@ class TokenStorage {
 
   init() {
     if (this.initialized) return;
-    
+
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         this.token = localStorage.getItem('token');
@@ -17,7 +17,7 @@ class TokenStorage {
     } catch (error) {
       console.warn('localStorage not available, using memory storage');
     }
-    
+
     this.initialized = true;
   }
 
@@ -57,7 +57,7 @@ const API = axios.create({
   withCredentials: true,
 });
 
-// ✅ Request Interceptor: Attach JWT token with improved error handling
+// ✅ Request Interceptor
 API.interceptors.request.use(
   (config) => {
     const token = tokenStorage.getToken();
@@ -81,7 +81,7 @@ API.interceptors.request.use(
   }
 );
 
-// ✅ Response Interceptor: Handle token refresh and errors
+// ✅ Response Interceptor
 API.interceptors.response.use(
   (response) => {
     if (process.env.NODE_ENV === 'development') {
@@ -106,7 +106,6 @@ API.interceptors.response.use(
   }
 );
 
-// ✅ Export token storage for use in other components
 export { tokenStorage };
 
 /* ----------------------- Course Service Functions ----------------------- */
@@ -122,9 +121,7 @@ export const createCourse = (formData) => {
 };
 
 export const getCourseById = (id) => {
-  if (!id) {
-    throw new Error('Course ID is required');
-  }
+  if (!id) throw new Error('Course ID is required');
   return API.get(`/courses/${id}`);
 };
 
@@ -140,47 +137,34 @@ export const updateCourse = (id, formData) => {
 /* ----------------------- Affiliate Service Functions ----------------------- */
 export const createOrder = async (courseId, affiliateCode) => {
   try {
-    if (!courseId) {
-      throw new Error('Course ID is required');
-    }
+    if (!courseId) throw new Error('Course ID is required');
 
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 Creating order for:', { courseId, affiliateCode });
     }
-    
+
     const response = await API.post('/affiliate/order', { courseId, affiliateCode });
-    
+
     if (process.env.NODE_ENV === 'development') {
       console.log('✅ Order created:', response.data);
     }
-    
+
     return response.data;
   } catch (error) {
     console.error('❌ Order creation error:', error.response?.status);
     console.error('❌ Error message:', error.response?.data?.message || error.message);
-    
+
     if (error.response?.status === 400) {
       const message = error.response.data?.message || 'Invalid request';
-      if (message.includes('receipt')) {
-        throw new Error('Receipt generation failed. Please try again.');
-      }
-      if (message.includes('Course')) {
-        throw new Error('Course not found or unavailable.');
-      }
-      if (message.includes('affiliate')) {
-        throw new Error('Invalid affiliate code.');
-      }
+      if (message.includes('receipt')) throw new Error('Receipt generation failed. Please try again.');
+      if (message.includes('Course')) throw new Error('Course not found or unavailable.');
+      if (message.includes('affiliate')) throw new Error('Invalid affiliate code.');
       throw new Error(message);
     }
-    
-    if (error.response?.status === 401) {
-      throw new Error('Please log in to continue.');
-    }
-    
-    if (error.response?.status === 500) {
-      throw new Error('Server error. Please try again later.');
-    }
-    
+
+    if (error.response?.status === 401) throw new Error('Please log in to continue.');
+    if (error.response?.status === 500) throw new Error('Server error. Please try again later.');
+
     throw new Error('Failed to create order. Please try again.');
   }
 };
@@ -189,7 +173,6 @@ export const verifyAndSavePurchase = async (data) => {
   try {
     const requiredFields = ['razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature', 'courseId'];
     const missingFields = requiredFields.filter(field => !data[field]);
-    
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
@@ -198,21 +181,20 @@ export const verifyAndSavePurchase = async (data) => {
     return response.data;
   } catch (error) {
     console.error('❌ Payment verification error:', error);
-    
+
     if (error.response?.status === 400) {
       throw new Error('Payment verification failed. Invalid payment data.');
     }
-    
+
     if (error.response?.status === 404) {
       throw new Error('Course not found.');
     }
-    
+
     throw new Error('Payment verification failed. Please contact support.');
   }
 };
 
 export const getAffiliateEarnings = () => API.get('/affiliate/earnings');
-
 export const getLeaderboard = () => API.get('/affiliate/leaderboard');
 
 /* ----------------------- Affiliate Link Service Functions ----------------------- */
@@ -226,9 +208,7 @@ export const createAffiliateLink = (data) => {
 export const getAffiliateLinks = () => API.get('/affiliate-links');
 
 export const getAffiliateLinkById = (id) => {
-  if (!id) {
-    throw new Error('Affiliate link ID is required');
-  }
+  if (!id) throw new Error('Affiliate link ID is required');
   return API.get(`/affiliate-links/${id}`);
 };
 
@@ -240,9 +220,7 @@ export const updateAffiliateLink = (id, data) => {
 };
 
 export const deleteAffiliateLink = (id) => {
-  if (!id) {
-    throw new Error('Affiliate link ID is required');
-  }
+  if (!id) throw new Error('Affiliate link ID is required');
   return API.delete(`/affiliate-links/${id}`);
 };
 
@@ -256,66 +234,95 @@ export const getAffiliateLinkAnalytics = (period = '30d') => {
 };
 
 export const getAffiliateLinkStats = (id) => {
-  if (!id) {
-    throw new Error('Affiliate link ID is required');
-  }
+  if (!id) throw new Error('Affiliate link ID is required');
   return API.get(`/affiliate-links/${id}/stats`);
 };
 
 /* ----------------------- QR Code Generation ----------------------- */
 export const generateQRCode = (id) => {
-  if (!id) {
-    throw new Error('Affiliate link ID is required');
-  }
+  if (!id) throw new Error('Affiliate link ID is required');
   return API.get(`/affiliate-links/${id}/qr-code`, { responseType: 'blob' });
 };
 
 /* ----------------------- Public Tracking (No Auth) ----------------------- */
 export const trackClick = (code) => {
-  if (!code) {
-    throw new Error('Affiliate code is required');
-  }
+  if (!code) throw new Error('Affiliate code is required');
   return axios.post(`${API.defaults.baseURL}/affiliate-links/track/${code}`);
 };
 
 /* ----------------------- FAQ Service Functions ----------------------- */
 export const getAllFAQs = () => API.get('/faq');
-
 export const getActiveFAQs = (params = {}) => API.get('/faq/active', { params });
-
 export const searchFAQs = (params) => API.get('/faq/search', { params });
-
 export const getFAQById = (id) => {
-  if (!id) {
-    throw new Error('FAQ ID is required');
-  }
+  if (!id) throw new Error('FAQ ID is required');
   return API.get(`/faq/${id}`);
 };
-
 export const createFAQ = (faqData) => {
-  if (!faqData) {
-    throw new Error('FAQ data is required');
-  }
+  if (!faqData) throw new Error('FAQ data is required');
   return API.post('/faq', faqData);
 };
-
 export const updateFAQ = (id, faqData) => {
-  if (!id) {
-    throw new Error('FAQ ID is required');
-  }
+  if (!id) throw new Error('FAQ ID is required');
   return API.put(`/faq/${id}`, faqData);
 };
-
 export const deleteFAQ = (id) => {
-  if (!id) {
-    throw new Error('FAQ ID is required');
-  }
+  if (!id) throw new Error('FAQ ID is required');
   return API.delete(`/faq/${id}`);
 };
-
-export const getFAQCategories = () => API.get('/faq/categories');
-
 export const getFAQStats = () => API.get('/faq/admin/stats');
+
+// ✅ Get FAQs from JSON file
+export const getFAQsFromJSON = async () => {
+  try {
+    const response = await fetch('/api/faqs/json');
+    const data = await response.json();
+    return { data };
+  } catch (error) {
+    console.error('Error fetching FAQs from JSON:', error);
+    throw error;
+  }
+};
+
+// ✅ Updated getFAQCategories to support JSON fallback
+export const getFAQCategories = async () => {
+  try {
+    const jsonResponse = await getFAQsFromJSON();
+    if (jsonResponse.data && Array.isArray(jsonResponse.data)) {
+      const categories = [...new Set(jsonResponse.data.map(faq => faq.category))];
+      return { data: categories };
+    }
+
+    const response = await fetch('/api/faqs/categories');
+    const data = await response.json();
+    return { data };
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+};
+
+/* ----------------------- Affiliate Link Service Functions ----------------------- */
+export const getOrCreateAffiliateLink = async (courseId) => {
+  if (!courseId) throw new Error('Course ID is required');
+
+  try {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 getOrCreateAffiliateLink called for courseId:', courseId);
+    }
+
+    const response = await API.post(`/affiliate-links/get-or-create`, { courseId });
+    return response.data;
+  } catch (error) {
+    console.error('❌ Error in getOrCreateAffiliateLink:', error.response?.status);
+    console.error('❌ Error Message:', error.response?.data?.message || error.message);
+
+    throw new Error(
+      error.response?.data?.message || 'Failed to get or create affiliate link.'
+    );
+  }
+};
+
 
 /* ----------------------- Export Default API ----------------------- */
 export default API;
