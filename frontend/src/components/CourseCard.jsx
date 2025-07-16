@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const CourseCard = ({ course, onBuyClick, isAdmin }) => {
+const CourseCard = ({ course, isAdmin }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -85,21 +85,6 @@ const CourseCard = ({ course, onBuyClick, isAdmin }) => {
     margin: 0,
   };
 
-  const buttonStyle = {
-    width: '100%',
-    background: 'linear-gradient(to right, #4299e1, #3182ce)',
-    color: 'white',
-    fontWeight: 600,
-    padding: '10px',
-    border: 'none',
-    borderRadius: '12px',
-    marginTop: '12px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    transition: 'all 0.2s ease',
-    transform: isHovered ? 'scale(1.02)' : 'scale(1)',
-  };
-
   const adminBadgeStyle = {
     position: 'absolute',
     top: '12px',
@@ -119,7 +104,6 @@ const CourseCard = ({ course, onBuyClick, isAdmin }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Thumbnail and Title */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
         <div style={thumbnailStyle}>
           <img
@@ -134,7 +118,6 @@ const CourseCard = ({ course, onBuyClick, isAdmin }) => {
         </div>
       </div>
 
-      {/* Price & Commission */}
       <div style={footerStyle}>
         <div style={boxStyle}>
           💰
@@ -152,20 +135,7 @@ const CourseCard = ({ course, onBuyClick, isAdmin }) => {
         </div>
       </div>
 
-      {/* Buy / Admin Indicator */}
-      {!isAdmin ? (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onBuyClick(course);
-          }}
-          style={buttonStyle}
-        >
-          Buy / Share
-        </button>
-      ) : (
-        <div style={adminBadgeStyle}>Admin View</div>
-      )}
+      {isAdmin && <div style={adminBadgeStyle}>Admin View</div>}
     </div>
   );
 };
