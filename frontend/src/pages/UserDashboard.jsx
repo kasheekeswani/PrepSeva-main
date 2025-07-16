@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import API, { getAffiliateEarnings } from '../services/api';
+import AffiliateLeaderboard from './AffiliateLeaderboard'; // ✅ Load from pages, not components
 
 export default function UserDashboard() {
   const { user, isUser, logout } = useAuth();
@@ -123,6 +124,7 @@ export default function UserDashboard() {
   const tabs = [
     { key: 'overview', label: '📊 Overview' },
     { key: 'quick-actions', label: '🚀 Quick Actions' },
+    { key: 'leaderboard', label: '🏆 Leaderboard' }, // ✅ Added tab
   ];
 
   const renderSection = () => {
@@ -193,6 +195,10 @@ export default function UserDashboard() {
           ))}
         </div>
       );
+    }
+
+    if (activeTab === 'leaderboard') {
+      return <AffiliateLeaderboard />; // ✅ Render leaderboard component
     }
 
     return null;
