@@ -9,7 +9,6 @@ const generateAffiliateLink = async (req, res) => {
     const { courseId } = req.body;
     const userId = req.user.id;
 
-    // Validate if the user already has a link for this course
     const existingLink = await AffiliateLink.findOne({ affiliate: userId, course: courseId });
     if (existingLink) {
       return res.status(200).json({
@@ -19,10 +18,7 @@ const generateAffiliateLink = async (req, res) => {
       });
     }
 
-    // Generate a unique affiliate code
     const code = await AffiliateLink.generateUniqueCode(userId, courseId);
-
-    // Construct the sharable URL
     const url = `${process.env.BASE_URL}/courses/${courseId}?ref=${code}`;
 
     const newLink = new AffiliateLink({
@@ -46,7 +42,7 @@ const generateAffiliateLink = async (req, res) => {
   }
 };
 
-// Get all affiliate links for a user with pagination & filter
+// Get all affiliate links for a user
 const getAffiliateLinks = async (req, res) => {
   try {
     const { page = 1, status } = req.query;
@@ -73,7 +69,7 @@ const getAffiliateLinks = async (req, res) => {
   }
 };
 
-// Get single affiliate link
+// Get a single affiliate link
 const getAffiliateLink = async (req, res) => {
   try {
     const link = await AffiliateLink.findById(req.params.id).populate('course');
@@ -145,7 +141,7 @@ const generateQRCode = async (req, res) => {
   }
 };
 
-// Get analytics with expanded overview structure
+// Get analytics
 const getAnalytics = async (req, res) => {
   try {
     const links = await AffiliateLink.find({ affiliate: req.user.id });
@@ -170,51 +166,6 @@ const getAnalytics = async (req, res) => {
   }
 };
 
-// Create Order with affiliate tracking
-const createOrder = async (req, res) => {
-  try {
-    const { courseId, affiliateCode } = req.body;
-
-    const course = await Course.findById(courseId);
-    if (!course) {
-      console.error(`❌ Course not found: ${courseId}`);
-      return res.status(404).json({ message: "Course not found" });
-    }
-
-    if (!course.price) {
-      console.error(`❌ Course price is missing for courseId: ${courseId}`);
-      return res.status(400).json({ message: "Course price is missing" });
-    }
-
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      console.error("❌ Razorpay keys missing in environment variables.");
-      return res.status(500).json({ message: "Server configuration error: Razorpay keys missing" });
-    }
-
-    let affiliateId = null;
-    if (affiliateCode) {
-      const affiliateLink = await AffiliateLink.findOne({ affiliateCode });
-      if (affiliateLink) {
-        affiliateId = affiliateLink.affiliate.toString();
-      }
-    }
-
-    const order = await razorpay.orders.create({
-      amount: Math.round(course.price * 100),
-      currency: "INR",
-      receipt: `receipt_course_${courseId}_${Date.now()}`,
-      notes: { courseId, affiliateId, affiliateCode }
-    });
-
-    console.log("✅ Razorpay order created:", order.id);
-
-    res.json({ order, affiliateId });
-  } catch (error) {
-    console.error("❌ Error creating order:", error);
-    res.status(500).json({ message: error.message || "Internal Server Error", stack: error.stack });
-  }
-};
-
 module.exports = {
   generateAffiliateLink,
   getAffiliateLinks,
@@ -222,6 +173,5 @@ module.exports = {
   trackClick,
   trackConversion,
   generateQRCode,
-  getAnalytics,
-  createOrder
+  getAnalytics
 };
