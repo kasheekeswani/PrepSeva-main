@@ -1,4 +1,3 @@
-// frontend/src/pages/TestManager.jsx
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
 
@@ -9,6 +8,10 @@ const TestManager = () => {
   const [selectedQuestionIds, setSelectedQuestionIds] = useState([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [durationHours, setDurationHours] = useState(0);
+  const [durationMinutes, setDurationMinutes] = useState(0);
+  const [durationSeconds, setDurationSeconds] = useState(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -55,14 +58,23 @@ const TestManager = () => {
     if (!title.trim()) return alert('Please enter a test title');
     if (!selectedPdfId) return alert('Please select a PDF');
     if (selectedQuestionIds.length === 0) return alert('Please select questions');
+    if (!startTime) return alert('Please set a start time');
+
+    const duration = {
+      hours: parseInt(durationHours, 10),
+      minutes: parseInt(durationMinutes, 10),
+      seconds: parseInt(durationSeconds, 10),
+    };
 
     setLoading(true);
     try {
-      await API.post('/tests', {
+      await API.post('/tests/create', {
         title,
         description,
         pdfId: selectedPdfId,
         questionIds: selectedQuestionIds,
+        startTime,
+        duration,
       });
       alert('✅ Test created successfully!');
       setTitle('');
@@ -70,6 +82,10 @@ const TestManager = () => {
       setSelectedPdfId('');
       setSelectedQuestionIds([]);
       setQuestions([]);
+      setStartTime('');
+      setDurationHours(0);
+      setDurationMinutes(0);
+      setDurationSeconds(0);
     } catch (err) {
       console.error('Failed to create test', err);
       alert('❌ Failed to create test');
@@ -112,8 +128,44 @@ const TestManager = () => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Test description"
-          style={{ width: '100%', padding: '0.5rem', minHeight: '80px' }}
+          style={{ width: '100%', padding: '0.5rem', minHeight: '80px', marginBottom: '1rem' }}
         />
+
+        <label>📅 Start Time:</label>
+        <input
+          type="datetime-local"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          style={{ width: '100%', padding: '0.5rem', marginBottom: '1rem' }}
+        />
+
+        <label>⏱️ Duration:</label>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+          <input
+            type="number"
+            min="0"
+            value={durationHours}
+            onChange={(e) => setDurationHours(e.target.value)}
+            placeholder="Hours"
+            style={{ width: '30%', padding: '0.5rem' }}
+          />
+          <input
+            type="number"
+            min="0"
+            value={durationMinutes}
+            onChange={(e) => setDurationMinutes(e.target.value)}
+            placeholder="Minutes"
+            style={{ width: '30%', padding: '0.5rem' }}
+          />
+          <input
+            type="number"
+            min="0"
+            value={durationSeconds}
+            onChange={(e) => setDurationSeconds(e.target.value)}
+            placeholder="Seconds"
+            style={{ width: '30%', padding: '0.5rem' }}
+          />
+        </div>
       </div>
 
       {selectedPdfId && (
