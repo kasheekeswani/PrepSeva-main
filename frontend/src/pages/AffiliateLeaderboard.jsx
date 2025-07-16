@@ -3,13 +3,34 @@ import { getLeaderboard } from '../services/api';
 
 const AffiliateLeaderboard = () => {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    getLeaderboard().then((res) => {
-      console.log('📊 Leaderboard API response:', res.data);
-      setData(res.data.leaderboard || []);
-    });
+    getLeaderboard()
+      .then((res) => {
+        console.log('📊 Leaderboard API response:', res.data);
+        setData(res.data?.leaderboard || []);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error('❌ Failed to fetch leaderboard:', err);
+        setError('Failed to load leaderboard. Please try again later.');
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  const maskEmail = (email) => {
+    const [user, domain] = email.split('@');
+    return user.slice(0, 2) + '***@' + domain;
+  };
+
+  const renderRank = (i) => {
+    if (i === 0) return '🥇';
+    if (i === 1) return '🥈';
+    if (i === 2) return '🥉';
+    return i + 1;
+  };
 
   return (
     <div style={styles.container}>
@@ -25,10 +46,18 @@ const AffiliateLeaderboard = () => {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(data) && data.length > 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="4" style={styles.cell}>Loading...</td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan="4" style={{ ...styles.cell, color: 'red' }}>{error}</td>
+              </tr>
+            ) : data.length > 0 ? (
               data.map((u, i) => (
                 <tr
-                  key={u.email}
+                  key={u.email || i}
                   style={{
                     ...styles.bodyRow,
                     backgroundColor: i % 2 === 0 ? '#f9f9f9' : '#ffffff',
@@ -37,10 +66,14 @@ const AffiliateLeaderboard = () => {
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e6f0fa')}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? '#f9f9f9' : '#ffffff')}
                 >
-                  <td style={styles.cell}>{i + 1}</td>
-                  <td style={styles.cell}>{u.name}</td>
-                  <td style={styles.cell}>{u.email}</td>
-                  <td style={styles.cell}>{u.totalCommission.toFixed(2)}</td>
+                  <td style={styles.cell}>{renderRank(i)}</td>
+                  <td style={styles.cell}>{u.name || 'N/A'}</td>
+                  <td style={styles.cell}>{u.email ? maskEmail(u.email) : 'N/A'}</td>
+                  <td style={styles.cell}>
+                    {typeof u.totalCommission === 'number'
+                      ? u.totalCommission.toFixed(2)
+                      : '—'}
+                  </td>
                 </tr>
               ))
             ) : (
