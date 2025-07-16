@@ -46,38 +46,77 @@ const submitTest = async (req, res) => {
   }
 };
 
-// Other controller methods (dummy structure — replace with your actual ones)
+// ✅ Get all tests
 const getAllTests = async (req, res) => {
   const tests = await Test.find().populate('pdfId questionIds');
   res.json(tests);
 };
 
+// ✅ Get test by ID
 const getTestById = async (req, res) => {
   const test = await Test.findById(req.params.id).populate('pdfId questionIds');
   if (!test) return res.status(404).json({ error: 'Test not found' });
   res.json(test);
 };
 
+// ✅ Create test (includes scheduling)
 const createTest = async (req, res) => {
-  const { title, description, pdfId, questionIds, userId } = req.body;
+  try {
+    const {
+      title,
+      description,
+      pdfId,
+      questionIds,
+      userId,
+      startTime,
+      duration, // expected as { hours, minutes, seconds }
+    } = req.body;
 
-  const test = new Test({ title, description, pdfId, questionIds, userId });
-  await test.save();
-  res.status(201).json(test);
+    if (!startTime || !duration) {
+      return res.status(400).json({ error: 'startTime and duration are required' });
+    }
+
+    const test = new Test({
+      title,
+      description,
+      pdfId,
+      questionIds,
+      userId,
+      startTime,
+      duration,
+    });
+
+    await test.save();
+    res.status(201).json(test);
+  } catch (err) {
+    console.error('❌ Error creating test:', err);
+    res.status(500).json({ error: 'Failed to create test' });
+  }
 };
 
+// ✅ Update test (includes rescheduling)
 const updateTest = async (req, res) => {
-  const updated = await Test.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(updated);
+  try {
+    const updated = await Test.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+  } catch (err) {
+    console.error('❌ Error updating test:', err);
+    res.status(500).json({ error: 'Failed to update test' });
+  }
 };
 
+// ✅ Delete test
 const deleteTest = async (req, res) => {
-  await Test.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Test deleted' });
+  try {
+    await Test.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Test deleted' });
+  } catch (err) {
+    console.error('❌ Error deleting test:', err);
+    res.status(500).json({ error: 'Failed to delete test' });
+  }
 };
 
-
-
+// ✅ Get tests by PDF ID
 const getTestsByPdf = async (req, res) => {
   try {
     const tests = await Test.find({ pdfId: req.params.pdfId }).populate('pdfId questionIds');
@@ -88,8 +127,7 @@ const getTestsByPdf = async (req, res) => {
   }
 };
 
-
-// ✅ Proper export
+// ✅ Export
 module.exports = {
   submitTest,
   getAllTests,
