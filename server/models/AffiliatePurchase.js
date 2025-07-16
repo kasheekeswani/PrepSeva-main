@@ -14,7 +14,7 @@ const affiliatePurchaseSchema = new mongoose.Schema({
   affiliate: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: false, // ✅ Changed from required: true to false
+    required: false,
     default: null
   },
   amountPaid: {
@@ -24,7 +24,7 @@ const affiliatePurchaseSchema = new mongoose.Schema({
   commissionEarned: {
     type: Number,
     required: true,
-    default: 0 // ✅ Added default value
+    default: 0
   },
   paymentId: {
     type: String,
@@ -32,7 +32,7 @@ const affiliatePurchaseSchema = new mongoose.Schema({
   },
   affiliateCode: {
     type: String,
-    required: false, // ✅ Changed from required: true to false
+    required: false,
     default: null
   },
   status: {
