@@ -99,21 +99,22 @@ export default function UserDashboard() {
 
   const cardStyle = (color) => ({
     backgroundColor: '#ffffff',
-    border: `2px solid ${color}`,
-    borderRadius: '8px',
+    borderLeft: `6px solid ${color}`,
+    borderRadius: '10px',
     padding: '1rem',
-    textAlign: 'center',
+    boxShadow: '0 3px 10px rgba(0,0,0,0.05)',
+    transition: 'transform 0.2s ease',
   });
 
   const cardTitle = {
     fontSize: '1rem',
     fontWeight: '600',
-    margin: '0 0 0.5rem 0',
+    margin: '0 0 0.4rem 0',
     color: '#374151',
   };
 
   const cardValue = {
-    fontSize: '1.5rem',
+    fontSize: '1.7rem',
     fontWeight: '700',
     margin: 0,
     color: '#111827',
@@ -130,7 +131,7 @@ export default function UserDashboard() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             gap: '1.5rem',
             marginBottom: '2rem',
           }}
@@ -160,7 +161,7 @@ export default function UserDashboard() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: '1.5rem',
           }}
         >
@@ -172,20 +173,22 @@ export default function UserDashboard() {
                 backgroundColor: color,
                 color: '#fff',
                 padding: '1.5rem',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 cursor: 'pointer',
-                transition: 'transform 0.2s',
+                transition: 'transform 0.2s, box-shadow 0.2s',
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.transform = 'scale(1.02)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.transform = 'scale(1)')
-              }
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.03)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{icon}</div>
-              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem' }}>{title}</h3>
-              <p style={{ margin: 0, fontSize: '0.95rem' }}>{desc}</p>
+              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>{title}</h3>
+              <p style={{ margin: 0, fontSize: '1rem' }}>{desc}</p>
             </div>
           ))}
         </div>
@@ -198,7 +201,7 @@ export default function UserDashboard() {
   if (!user || !isUser) return null;
 
   return (
-    <div style={{ padding: '2rem', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: '2rem', backgroundColor: '#f3f4f6', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <header
           style={{
@@ -208,42 +211,56 @@ export default function UserDashboard() {
             marginBottom: '2rem',
           }}
         >
-          <h1 style={{ fontSize: '1.6rem', fontWeight: '700', color: '#111827' }}>
-            👋 Welcome, {user?.name || user?.email}
-          </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>{user?.email}</span>
-            <button
-              onClick={handleLogout}
+          <div>
+            <h1
               style={{
-                backgroundColor: '#dc3545',
-                color: '#fff',
-                border: 'none',
-                padding: '0.5rem 0.75rem',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '0.9rem',
+                fontSize: '1.75rem',
+                fontWeight: '700',
+                color: '#111827',
+                marginBottom: '0.25rem',
               }}
             >
-              Logout
-            </button>
+              👋 Welcome, {user?.name || user?.email.split('@')[0]}
+            </h1>
+            <span style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+              {user?.email}
+            </span>
           </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              backgroundColor: '#ef4444',
+              color: '#fff',
+              border: 'none',
+              padding: '0.6rem 1rem',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '0.95rem',
+              fontWeight: '600',
+              transition: 'background 0.2s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#dc2626')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#ef4444')}
+          >
+            Logout
+          </button>
         </header>
 
-        <nav style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+        <nav style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                border: activeTab === tab.key ? '2px solid #3b82f6' : '1px solid #d1d5db',
-                backgroundColor: activeTab === tab.key ? '#e0f2fe' : '#ffffff',
+                padding: '0.6rem 1.2rem',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: activeTab === tab.key ? '#3b82f6' : '#e5e7eb',
+                color: activeTab === tab.key ? '#ffffff' : '#374151',
+                fontWeight: '600',
                 cursor: 'pointer',
-                fontWeight: activeTab === tab.key ? '600' : '500',
-                color: activeTab === tab.key ? '#1e40af' : '#374151',
-                transition: 'background 0.2s, border 0.2s',
+                fontSize: '1rem',
+                transition: 'all 0.2s',
               }}
             >
               {tab.label}
