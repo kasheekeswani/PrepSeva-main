@@ -106,3 +106,30 @@ exports.updateCourse = async (req, res) => {
     res.status(500).json({ message: error.message || 'Internal server error while updating course' });
   }
 };
+
+
+// ✅ Get the next course based on current course ID
+exports.getNextCourse = async (req, res) => {
+  try {
+    const currentCourseId = req.params.id;
+    const allCourses = await Course.find().sort({ createdAt: 1 }); // ascending
+
+    const currentIndex = allCourses.findIndex(c => c._id.toString() === currentCourseId);
+
+    if (currentIndex === -1) {
+      return res.status(404).json({ message: 'Current course not found in list' });
+    }
+
+    const nextCourse = allCourses[currentIndex + 1];
+
+    if (!nextCourse) {
+      return res.status(204).json({ message: 'No more courses available' }); // No Content
+    }
+
+    res.status(200).json(nextCourse);
+  } catch (error) {
+    console.error('❌ Error in getNextCourse:', error);
+    res.status(500).json({ message: error.message || 'Internal server error while fetching next course' });
+  }
+};
+
