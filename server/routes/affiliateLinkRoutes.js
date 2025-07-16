@@ -11,15 +11,16 @@ const {
   getAnalytics
 } = require('../controllers/affiliateLinkController');
 
-const auth = require('../middleware/auth'); // Correct file path
+const auth = require('../middleware/auth');
 
-// Routes
-router.post('/create', auth.user, generateAffiliateLink);         // Protected: any authenticated user
-router.get('/my-links', auth.user, getAffiliateLinks);            // Protected: user
-router.get('/link/:id', auth.user, getAffiliateLink);             // Protected: user
-router.get('/track/:token', trackClick);                          // Public
-router.post('/conversion', trackConversion);                      // Public (e.g., for post-purchase tracking)
-router.get('/qr/:id', auth.user, generateQRCode);                 // Protected: user
-router.get('/analytics', auth.admin, getAnalytics);               // Admin-only route
+console.log('✅ Affiliate link routes loaded');
+
+router.post('/create', auth.user, generateAffiliateLink);
+router.get('/my-links', auth.user, getAffiliateLinks);
+router.get('/link/:id', auth.user, getAffiliateLink);
+router.get('/track/:token', trackClick);
+router.post('/conversion', trackConversion);
+router.get('/qr/:id', auth.user, generateQRCode);
+router.get('/analytics', auth.admin, getAnalytics);
 
 module.exports = router;
